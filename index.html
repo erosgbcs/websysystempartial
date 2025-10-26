@@ -3,43 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bookkeeping System (Run Python)</title>
+  <title>Bookkeeping System (Python + CSV Simulation)</title>
   <style>
-    body { font-family: Consolas, monospace; background: #111; color: #0f0; padding: 20px; }
-    textarea { width: 100%; height: 400px; background: #000; color: #0f0; border: 1px solid #333; padding: 10px; }
-    button { margin-top: 10px; padding: 10px 20px; background: #0f0; color: #000; font-weight: bold; border: none; cursor: pointer; }
-    pre { background: #000; color: #0f0; padding: 10px; margin-top: 20px; height: 300px; overflow-y: auto; }
+    body {
+      background: #111;
+      color: #0f0;
+      font-family: Consolas, monospace;
+      padding: 20px;
+    }
+    textarea, pre {
+      width: 100%;
+      background: #000;
+      color: #0f0;
+      border: 1px solid #333;
+      padding: 10px;
+      margin-top: 10px;
+    }
+    button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      margin-top: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-  <h1>💻 Run Python Bookkeeping System</h1>
-  <p>This version runs directly in your browser using <strong>Pyodide</strong>.</p>
+  <h1>💻 Bookkeeping System — Python + Browser CSV</h1>
+  <p>This runs your bookkeeping code using <b>Pyodide</b>. Data is saved locally like a CSV file.</p>
 
-  <textarea id="code">
-import csv
-from datetime import datetime
-import os
-
-print("📘 Bookkeeping system ready!")
-print("Note: File operations are limited in browser mode.")
-  </textarea>
-
-  <br>
-  <button onclick="runPython()">▶️ Run Code</button>
-  <pre id="output"></pre>
+  <textarea id="output" rows="20" readonly></textarea><br>
+  <button onclick="runCode()">▶️ Run Bookkeeping</button>
 
   <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
   <script>
-    async function runPython() {
-      const pyodide = await loadPyodide();
-      const code = document.getElementById("code").value;
+    async function runCode() {
       const output = document.getElementById("output");
-      output.textContent = "Running Python code...\n";
+      output.value = "Loading Python...\n";
+      const pyodide = await loadPyodide();
+      output.value += "Python loaded!\n";
+
+      // Python code
+      const code = `
+import js
+import csv
+from datetime import datetime
+import io
+
+# Simulated CSV file stored in browser localStorage
+def load_csv():
+    data = js.localStorage.getItem("bookkeeping_csv")
+    if not data:
+        return []
+    reader = csv.DictReader(io.StringIO(data))
+    return list(reader)
+
+def save_csv(rows):
+    f = io.StringIO()
+    writer = csv.DictWriter(f, fieldnames=['Date','Description','Type','Category','Amount'])
+    writer.writeheader()
+    writer.writerows(rows)
+    js.localStorage.setItem("bookkeeping_csv", f.getvalue())
+
+def show_data(rows):
+    if not rows:
+        print("No transactions yet. Add one first!")
+        return
+    print("\\n# Date       Description       Type     Category       Amount")
+    print("-" * 70)
+    for r in rows:
+        print(f"{r['Date']:10} {r['Description']:15} {r['Type']:8} {r['Category']:10} {r['Amount']:>8}")
+
+rows = load_csv()
+print("📘 Bookkeeping system ready.")
+show_data(rows)
+
+print("\\nAdding new income...")
+today = datetime.today().strftime('%Y-%m-%d')
+rows.append({
+    'Date': today,
+    'Description': 'Online Sale',
+    'Type': 'Income',
+    'Category': 'Sales',
+    'Amount': '5000'
+})
+save_csv(rows)
+print("✅ New income saved locally!")
+
+print("\\nReloaded transactions:")
+show_data(load_csv())
+`;
       try {
         const result = await pyodide.runPythonAsync(code);
-        output.textContent += result || "\n✅ Finished.";
-      } catch (err) {
-        output.textContent += "\n❌ Error:\n" + err;
+        output.value += "\\nRun complete! Reload page to see saved data.";
+      } catch (e) {
+        output.value += "\\n❌ Error: " + e;
       }
     }
   </script>
