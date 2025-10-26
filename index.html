@@ -1,1 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookkeeping System (Run Python)</title>
+  <style>
+    body { font-family: Consolas, monospace; background: #111; color: #0f0; padding: 20px; }
+    textarea { width: 100%; height: 400px; background: #000; color: #0f0; border: 1px solid #333; padding: 10px; }
+    button { margin-top: 10px; padding: 10px 20px; background: #0f0; color: #000; font-weight: bold; border: none; cursor: pointer; }
+    pre { background: #000; color: #0f0; padding: 10px; margin-top: 20px; height: 300px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <h1>💻 Run Python Bookkeeping System</h1>
+  <p>This version runs directly in your browser using <strong>Pyodide</strong>.</p>
 
+  <textarea id="code">
+import csv
+from datetime import datetime
+import os
+
+print("📘 Bookkeeping system ready!")
+print("Note: File operations are limited in browser mode.")
+  </textarea>
+
+  <br>
+  <button onclick="runPython()">▶️ Run Code</button>
+  <pre id="output"></pre>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  <script>
+    async function runPython() {
+      const pyodide = await loadPyodide();
+      const code = document.getElementById("code").value;
+      const output = document.getElementById("output");
+      output.textContent = "Running Python code...\n";
+      try {
+        const result = await pyodide.runPythonAsync(code);
+        output.textContent += result || "\n✅ Finished.";
+      } catch (err) {
+        output.textContent += "\n❌ Error:\n" + err;
+      }
+    }
+  </script>
+</body>
+</html>
